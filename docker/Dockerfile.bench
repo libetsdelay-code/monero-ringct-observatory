@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev \
     libboost-locale-dev libboost-program-options-dev libboost-regex-dev \
     libboost-serialization-dev libboost-system-dev libboost-thread-dev \
-    libgtest-dev python3 \
+    libgtest-dev python3 python3-requests cargo rustc \
  && rm -rf /var/lib/apt/lists/*
 
 # Which Monero to build. A branch for now; the run script records the exact commit.
