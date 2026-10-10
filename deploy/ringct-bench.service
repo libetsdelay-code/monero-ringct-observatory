@@ -1,0 +1,13 @@
+[Unit]
+Description=Monero RingCT Performance Observatory - nightly benchmark
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# EDIT these for your LXC:
+User=root
+WorkingDirectory=/root/monero-ringct-observatory
+Environment=REFS=release-v0.18
+# To compare versions:  Environment=REFS=release-v0.18 master
+ExecStart=/root/monero-ringct-observatory/scripts/nightly.sh

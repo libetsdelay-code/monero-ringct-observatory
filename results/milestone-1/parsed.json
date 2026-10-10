@@ -5,7 +5,8 @@
     "image": "monero-ringct-bench:latest",
     "host_cpu": "laptop CPU (14-core, 2023)",
     "host_kernel": "linux",
-    "filter": ".*[Cc]lsag.*|.*[Bb]ulletproof.*"
+    "filter": ".*[Cc]lsag.*|.*[Bb]ulletproof.*",
+    "monero_ref": "release-v0.18"
   },
   "measurements": [
     {

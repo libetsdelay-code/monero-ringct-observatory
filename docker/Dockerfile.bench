@@ -22,8 +22,9 @@ RUN git clone --recursive --branch ${MONERO_REF} --depth 1 \
     https://github.com/monero-project/monero.git /monero
 
 WORKDIR /monero
-# Record the exact commit we built, so results are attributable.
+# Record the exact commit + the ref we built, so results are attributable.
 RUN git rev-parse HEAD > /monero_commit.txt && cat /monero_commit.txt
+RUN echo "${MONERO_REF}" > /monero_ref.txt && cat /monero_ref.txt
 
 WORKDIR /monero/build
 RUN cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_TESTS=ON .. \

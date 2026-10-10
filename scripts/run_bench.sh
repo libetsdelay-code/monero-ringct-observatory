@@ -23,9 +23,13 @@ echo "[*] binary: $BIN"
 
 # Metadata: exact monero commit, host CPU, image.
 docker run --rm "$IMAGE" cat /monero_commit.txt > "$OUT/monero_commit.txt"
+# Monero ref: prefer /monero_ref.txt baked into the image, else env, else unknown.
+REF="$(docker run --rm "$IMAGE" bash -lc 'cat /monero_ref.txt 2>/dev/null' || true)"
+REF="${REF:-${MONERO_REF:-unknown}}"
 {
   echo "timestamp_utc=$STAMP"
   echo "monero_commit=$(cat "$OUT/monero_commit.txt")"
+  echo "monero_ref=$REF"
   echo "image=$IMAGE"
   echo "host_cpu=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ //')"
   echo "host_kernel=$(uname -r)"

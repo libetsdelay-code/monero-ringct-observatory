@@ -79,14 +79,15 @@ def main():
               "count": len(rows), "unmatched_lines": unmatched}
     (OUTDIR / "parsed.json").write_text(json.dumps(result, indent=2))
 
-    commit = meta.get("monero_commit", "unknown")[:12]
+    # ref/commit are attached as Pushgateway grouping labels (see push_metrics.sh),
+    # so they are intentionally NOT in the metric lines here.
     out = ["# HELP monero_bench_median_us performance_tests median time (us).",
            "# TYPE monero_bench_median_us gauge"]
     for r in rows:
         safe = re.sub(r"[^a-zA-Z0-9_]", "_", r["name"])
         out.append(
-            f'monero_bench_median_us{{test="{safe}",'
-            f'category="{r["category"]}",commit="{commit}"}} {r["median_us"]}'
+            f'monero_bench_median_us{{test="{safe}",category="{r["category"]}"}} '
+            f'{r["median_us"]}'
         )
     (OUTDIR / "metrics.prom").write_text("\n".join(out) + "\n")
 
