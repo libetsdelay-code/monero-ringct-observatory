@@ -6,10 +6,13 @@ height/sync, peers, difficulty, mempool, and alt-chain (reorg) signals.
 Serves /metrics on :9000.
 """
 import json
+import os
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-RPC = "http://127.0.0.1:18081/json_rpc"
+# Mainnet RPC is 18081; the FCMP++ stressnet (testnet) uses 28081.
+RPC = os.environ.get("MONERO_RPC", "http://127.0.0.1:18081/json_rpc")
+LISTEN_PORT = int(os.environ.get("EXPORTER_PORT", "9000"))
 
 
 def rpc(method, params=None):
@@ -74,4 +77,4 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    HTTPServer(("0.0.0.0", 9000), Handler).serve_forever()
+    HTTPServer(("0.0.0.0", LISTEN_PORT), Handler).serve_forever()

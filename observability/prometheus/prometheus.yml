@@ -14,3 +14,10 @@ scrape_configs:
   - job_name: monero_node
     static_configs:
       - targets: ["monero-node:9000"]
+        labels: { network: mainnet, profile: hdd-pruned }
+
+  # FCMP++ & Carrot beta stressnet v3 (testnet), SSD profile.
+  - job_name: stressnet_ssd
+    static_configs:
+      - targets: ["stressnet-ssd:9000"]
+        labels: { network: stressnet, profile: ssd-full }
