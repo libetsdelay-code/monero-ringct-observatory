@@ -1,0 +1,15 @@
+# Adds a size-probe target on top of the already-built benchmark image.
+# Incremental: only compiles size_probe.cpp + links (reuses Monero's objects).
+# NOTE: build with the same MONERO_REF as its base image for consistent labels.
+ARG BASE=monero-ringct-bench:latest
+FROM ${BASE}
+
+COPY size_probe.cpp /monero/tests/performance_tests/size_probe.cpp
+COPY size_probe.cmake /tmp/size_probe.cmake
+RUN cat /tmp/size_probe.cmake >> /monero/tests/performance_tests/CMakeLists.txt
+
+WORKDIR /monero/build
+RUN cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_TESTS=ON .. \
+ && make -j4 size_probe
+
+CMD ["bash"]

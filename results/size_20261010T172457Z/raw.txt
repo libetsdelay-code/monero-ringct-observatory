@@ -1,0 +1,17 @@
+bulletproof_plus outputs=1 size_bytes=578
+bulletproof outputs=1 size_bytes=674
+bulletproof_plus outputs=2 size_bytes=642
+bulletproof outputs=2 size_bytes=738
+bulletproof_plus outputs=4 size_bytes=706
+bulletproof outputs=4 size_bytes=802
+bulletproof_plus outputs=8 size_bytes=770
+bulletproof outputs=8 size_bytes=866
+bulletproof_plus outputs=16 size_bytes=834
+bulletproof outputs=16 size_bytes=930
+clsag ring=2 size_bytes=129
+clsag ring=4 size_bytes=193
+clsag ring=8 size_bytes=321
+clsag ring=11 size_bytes=417
+clsag ring=16 size_bytes=577
+clsag ring=32 size_bytes=1089
+clsag ring=64 size_bytes=2113

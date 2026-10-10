@@ -1,0 +1,19 @@
+# HELP monero_proof_size_bytes serialized proof size (bytes).
+# TYPE monero_proof_size_bytes gauge
+monero_proof_size_bytes{scheme="bulletproof_plus",param="1"} 578
+monero_proof_size_bytes{scheme="bulletproof",param="1"} 674
+monero_proof_size_bytes{scheme="bulletproof_plus",param="2"} 642
+monero_proof_size_bytes{scheme="bulletproof",param="2"} 738
+monero_proof_size_bytes{scheme="bulletproof_plus",param="4"} 706
+monero_proof_size_bytes{scheme="bulletproof",param="4"} 802
+monero_proof_size_bytes{scheme="bulletproof_plus",param="8"} 770
+monero_proof_size_bytes{scheme="bulletproof",param="8"} 866
+monero_proof_size_bytes{scheme="bulletproof_plus",param="16"} 834
+monero_proof_size_bytes{scheme="bulletproof",param="16"} 930
+monero_proof_size_bytes{scheme="clsag",param="2"} 129
+monero_proof_size_bytes{scheme="clsag",param="4"} 193
+monero_proof_size_bytes{scheme="clsag",param="8"} 321
+monero_proof_size_bytes{scheme="clsag",param="11"} 417
+monero_proof_size_bytes{scheme="clsag",param="16"} 577
+monero_proof_size_bytes{scheme="clsag",param="32"} 1089
+monero_proof_size_bytes{scheme="clsag",param="64"} 2113

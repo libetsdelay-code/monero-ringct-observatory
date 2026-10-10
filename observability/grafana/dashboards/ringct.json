@@ -95,6 +95,24 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "µs", "custom": { "drawStyle": "line", "pointSize": 6, "showPoints": "always" } }, "overrides": [] }
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Proof size (bytes) — CLSAG by ring, Bulletproof(+) by outputs",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 29 },
+      "options": { "orientation": "horizontal", "displayMode": "gradient", "showUnfilled": true },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "monero_proof_size_bytes",
+          "instant": true,
+          "legendFormat": "{{scheme}} p={{param}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
     }
   ]
 }
