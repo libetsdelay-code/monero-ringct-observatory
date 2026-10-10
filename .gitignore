@@ -3,3 +3,6 @@ results/run_*/
 !results/.gitkeep
 __pycache__/
 *.pyc
+
+results/*.log
+results/nightly_*.log
