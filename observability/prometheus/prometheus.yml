@@ -21,3 +21,9 @@ scrape_configs:
     static_configs:
       - targets: ["stressnet-ssd:9000"]
         labels: { network: stressnet, profile: ssd-full }
+
+  # Same stressnet, same 4-core / 6 GB caps, whole container on HDD .
+  - job_name: stressnet_hdd
+    static_configs:
+      - targets: ["stressnet-hdd:9000"]
+        labels: { network: stressnet, profile: hdd-full }

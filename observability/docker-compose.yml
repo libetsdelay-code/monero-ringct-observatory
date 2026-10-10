@@ -21,6 +21,7 @@ services:
     extra_hosts:
       - "monero-node:${MONERO_NODE_IP:?set MONERO_NODE_IP in observability/.env}"
       - "stressnet-ssd:${STRESSNET_SSD_IP:?set STRESSNET_SSD_IP in observability/.env}"
+      - "stressnet-hdd:${STRESSNET_HDD_IP:?set STRESSNET_HDD_IP in observability/.env}"
     ports:
       - "9090:9090"
     depends_on:
