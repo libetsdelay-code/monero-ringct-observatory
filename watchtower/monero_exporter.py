@@ -67,7 +67,7 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.send_response(200)
             self.end_headers()
-            self.wfile.write(b"monero exporter — see /metrics\n")
+            self.wfile.write(b"monero exporter - see /metrics\n")
 
     def log_message(self, *a):
         pass

@@ -9,3 +9,8 @@ scrape_configs:
     honor_labels: true
     static_configs:
       - targets: ["pushgateway:9091"]
+
+  # Watchtower node exporter (mainnet node).
+  - job_name: monero_node
+    static_configs:
+      - targets: ["monero-node:9000"]

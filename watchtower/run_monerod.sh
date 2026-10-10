@@ -5,6 +5,8 @@
 set -euo pipefail
 DATA="${DATA:-/data/bitmonero}"
 mkdir -p "$DATA"
+# simple-monerod runs as uid 1000 ("monero"); give it ownership of the data dir.
+chown -R 1000:1000 "$DATA"
 
 docker rm -f monerod >/dev/null 2>&1 || true
 docker run -d --name monerod --restart unless-stopped \
