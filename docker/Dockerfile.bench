@@ -1,0 +1,34 @@
+# Reproducible build of Monero's own performance_tests binary.
+# Compiles the real CLSAG + Bulletproofs(+) verification benchmarks from source.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake pkg-config ca-certificates git \
+    libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev \
+    liblzma-dev libreadline-dev libexpat1-dev libpgm-dev \
+    libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev \
+    libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev \
+    libboost-locale-dev libboost-program-options-dev libboost-regex-dev \
+    libboost-serialization-dev libboost-system-dev libboost-thread-dev \
+    libgtest-dev python3 \
+ && rm -rf /var/lib/apt/lists/*
+
+# Which Monero to build. A branch for now; the run script records the exact commit.
+ARG MONERO_REF=release-v0.18
+ARG BUILD_JOBS=4
+
+RUN git clone --recursive --branch ${MONERO_REF} --depth 1 \
+    https://github.com/monero-project/monero.git /monero
+
+WORKDIR /monero
+# Record the exact commit we built, so results are attributable.
+RUN git rev-parse HEAD > /monero_commit.txt && cat /monero_commit.txt
+
+WORKDIR /monero/build
+RUN cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_TESTS=ON .. \
+ && make -j${BUILD_JOBS} performance_tests
+
+# The benchmark binary.
+# (path resolved at run time; see scripts/run_bench.sh)
+CMD ["bash"]
