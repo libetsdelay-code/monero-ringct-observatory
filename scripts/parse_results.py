@@ -1,27 +1,46 @@
 #!/usr/bin/env python3
 """Parse Monero performance_tests output into structured JSON + a Prometheus
-textfile. The exact line format is confirmed against the first real run, then
-this parser is tightened. For now it is tolerant and keeps anything it finds.
+textfile.
+
+Real line format (confirmed 2026-10-10):
+  <name> (<N> calls) - OK: <mean> <unit>/call (min <m> <u>, 90th <p> <u>, \
+median <md> <u>, std dev <s> <u>)
+units: µs | ms | s
 
 Usage: parse_results.py results/run_<stamp>/raw.txt
 """
-import json, re, sys, os, pathlib
+import json, re, sys, pathlib
 
 RAW = pathlib.Path(sys.argv[1])
 OUTDIR = RAW.parent
 
-# performance_tests prints one line per test, e.g.:
-#   test_name (1000 runs): 123.4 microseconds per call, min 120 max 130
-# The regex is deliberately broad; refine after seeing real output.
+U = {"µs": 1.0, "us": 1.0, "ms": 1_000.0, "s": 1_000_000.0}
+
 LINE = re.compile(
-    r"^(?P<name>[A-Za-z0-9_:<>,\s\.\-\(\)]+?)\s*"
-    r"(?:\((?P<runs>\d+)\s*runs?\))?\s*[:\-]\s*"
-    r"(?P<value>[\d\.]+)\s*(?P<unit>ns|us|microseconds|ms|milliseconds|s)\b",
-    re.IGNORECASE,
+    r"^(?P<name>.+?)\s*\((?P<calls>\d+)\s*calls?\)\s*-\s*OK:\s*"
+    r"(?P<mean>[\d.]+)\s*(?P<mu>µs|us|ms|s)/call\s*\("
+    r"min\s*(?P<min>[\d.]+)\s*(?P<minu>µs|us|ms|s),\s*"
+    r"90th\s*(?P<p90>[\d.]+)\s*(?P<p90u>µs|us|ms|s),\s*"
+    r"median\s*(?P<median>[\d.]+)\s*(?P<medu>µs|us|ms|s),\s*"
+    r"std dev\s*(?P<std>[\d.]+)\s*(?P<stdu>µs|us|ms|s)\)"
 )
 
-UNIT_TO_US = {"ns": 1e-3, "us": 1.0, "microseconds": 1.0,
-              "ms": 1e3, "milliseconds": 1e3, "s": 1e6}
+def us(v, u):
+    return round(float(v) * U[u], 3)
+
+def classify(name):
+    n = name.lower()
+    if "clsag" in n:
+        return "clsag"
+    if "aggregated_bulletproofs" in n:
+        return "bulletproof_batch_verify"
+    if "check_tx_signature" in n:
+        return "tx_verify"
+    if "construct_tx" in n:
+        return "tx_construct"
+    if "bulletproof" in n:
+        return "bulletproof"
+    return "other"
 
 def load_meta(d):
     m = {}
@@ -35,42 +54,52 @@ def load_meta(d):
 
 def main():
     meta = load_meta(OUTDIR)
-    rows = []
+    rows, unmatched = [], 0
     for ln in RAW.read_text(errors="replace").splitlines():
-        mt = LINE.match(ln.strip())
-        if not mt:
+        ln = ln.strip()
+        if not ln:
             continue
-        unit = mt.group("unit").lower()
-        val = float(mt.group("value"))
+        mt = LINE.match(ln)
+        if not mt:
+            unmatched += 1
+            continue
+        g = mt.groupdict()
         rows.append({
-            "name": mt.group("name").strip(),
-            "runs": int(mt.group("runs")) if mt.group("runs") else None,
-            "value_us": round(val * UNIT_TO_US.get(unit, 1.0), 4),
-            "raw_value": val,
-            "raw_unit": unit,
+            "name": g["name"].strip(),
+            "category": classify(g["name"]),
+            "calls": int(g["calls"]),
+            "mean_us": us(g["mean"], g["mu"]),
+            "median_us": us(g["median"], g["medu"]),
+            "min_us": us(g["min"], g["minu"]),
+            "p90_us": us(g["p90"], g["p90u"]),
+            "std_us": us(g["std"], g["stdu"]),
         })
 
-    result = {"meta": meta, "measurements": rows, "count": len(rows)}
+    result = {"meta": meta, "measurements": rows,
+              "count": len(rows), "unmatched_lines": unmatched}
     (OUTDIR / "parsed.json").write_text(json.dumps(result, indent=2))
 
-    # Prometheus textfile exporter format.
     commit = meta.get("monero_commit", "unknown")[:12]
-    lines = [
-        "# HELP monero_bench_us Monero performance_tests timing (microseconds).",
-        "# TYPE monero_bench_us gauge",
-    ]
+    out = ["# HELP monero_bench_median_us performance_tests median time (us).",
+           "# TYPE monero_bench_median_us gauge"]
     for r in rows:
         safe = re.sub(r"[^a-zA-Z0-9_]", "_", r["name"])
-        lines.append(
-            f'monero_bench_us{{test="{safe}",commit="{commit}"}} {r["value_us"]}'
+        out.append(
+            f'monero_bench_median_us{{test="{safe}",'
+            f'category="{r["category"]}",commit="{commit}"}} {r["median_us"]}'
         )
-    (OUTDIR / "metrics.prom").write_text("\n".join(lines) + "\n")
+    (OUTDIR / "metrics.prom").write_text("\n".join(out) + "\n")
 
-    print(f"[*] parsed {len(rows)} measurements")
-    print(f"[*] wrote  {OUTDIR/'parsed.json'}")
-    print(f"[*] wrote  {OUTDIR/'metrics.prom'}")
-    if not rows:
-        print("[!] 0 parsed — inspect raw.txt and tighten the LINE regex.")
+    # Console summary grouped by category.
+    print(f"[*] parsed {len(rows)} measurements ({unmatched} lines ignored)")
+    for cat in ("clsag", "bulletproof_batch_verify", "tx_verify",
+                "tx_construct", "bulletproof", "other"):
+        sub = [r for r in rows if r["category"] == cat]
+        if sub:
+            print(f"\n== {cat} ==")
+            for r in sub:
+                print(f"  {r['median_us']:>12.1f} us (median)  {r['name']}")
+    print(f"\n[*] wrote {OUTDIR/'parsed.json'} and {OUTDIR/'metrics.prom'}")
 
 if __name__ == "__main__":
     main()
