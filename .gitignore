@@ -6,3 +6,6 @@ __pycache__/
 
 results/*.log
 results/nightly_*.log
+
+# Local addresses of scrape targets (never commit)
+observability/.env

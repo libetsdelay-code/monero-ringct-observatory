@@ -16,6 +16,11 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prom_data:/prometheus
+    # Scrape targets are referenced by name in prometheus.yml; the real
+    # addresses live in observability/.env (git-ignored, see .env.example).
+    extra_hosts:
+      - "monero-node:${MONERO_NODE_IP:?set MONERO_NODE_IP in observability/.env}"
+      - "stressnet-ssd:${STRESSNET_SSD_IP:?set STRESSNET_SSD_IP in observability/.env}"
     ports:
       - "9090:9090"
     depends_on:

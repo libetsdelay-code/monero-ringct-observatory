@@ -23,6 +23,7 @@ curl -fsSL https://get.docker.com | sh
 ```bash
 git clone <this-repo> ~/monero-ringct-observatory
 cd ~/monero-ringct-observatory
+cp observability/.env.example observability/.env   # then set the exporter IPs
 docker compose -f observability/docker-compose.yml up -d
 ```
 Grafana: http://<lxc-ip>:3000  (anonymous Viewer; admin/admin to edit).

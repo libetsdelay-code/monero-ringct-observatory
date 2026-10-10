@@ -14,6 +14,10 @@ fi
 docker info >/dev/null 2>&1 || { echo "  ERROR: docker daemon not usable (LXC needs nesting=1)"; exit 1; }
 
 echo "== [2/5] observability stack =="
+if [ ! -f observability/.env ]; then
+  cp observability/.env.example observability/.env
+  echo "  NOTE: created observability/.env from the example; set the real exporter IPs."
+fi
 docker compose -f observability/docker-compose.yml up -d
 
 echo "== [3/5] build benchmark image (compiles Monero performance_tests; slow) =="
