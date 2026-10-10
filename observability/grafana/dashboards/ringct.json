@@ -1,0 +1,100 @@
+{
+  "uid": "ringct-observatory",
+  "title": "Monero RingCT Performance Observatory",
+  "tags": ["monero", "ringct", "benchmark"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "All RingCT benchmarks (median µs) — latest",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 11, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "monero_bench_median_us",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true, "exported_job": true },
+          "renameByName": { "Value": "median_us" }
+        } },
+        { "id": "sortBy", "options": { "fields": "", "sort": [ { "field": "median_us", "desc": true } ] } }
+      ],
+      "fieldConfig": { "defaults": { "unit": "µs", "custom": { "align": "auto" } }, "overrides": [] }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "CLSAG median µs (by ring size)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 11 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "monero_bench_median_us{category=\"clsag\"}",
+          "legendFormat": "{{test}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "µs", "custom": { "drawStyle": "line", "pointSize": 6, "showPoints": "always" } }, "overrides": [] }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Bulletproofs(+) prove vs verify (µs)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 11 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "monero_bench_median_us{category=\"bulletproof\"}",
+          "legendFormat": "{{test}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "µs", "custom": { "drawStyle": "line", "pointSize": 6, "showPoints": "always" } }, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Batch verification (aggregated bulletproofs, µs)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "monero_bench_median_us{category=\"bulletproof_batch_verify\"}",
+          "legendFormat": "{{test}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "µs", "custom": { "drawStyle": "line", "pointSize": 6, "showPoints": "always" } }, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Full tx verify: CLSAG + Bulletproof (µs)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "monero_bench_median_us{category=\"tx_verify\"}",
+          "legendFormat": "{{test}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "µs", "custom": { "drawStyle": "line", "pointSize": 6, "showPoints": "always" } }, "overrides": [] }
+    }
+  ]
+}

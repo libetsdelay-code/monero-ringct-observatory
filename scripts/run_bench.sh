@@ -36,5 +36,14 @@ docker run --rm "$IMAGE" cat /monero_commit.txt > "$OUT/monero_commit.txt"
 docker run --rm "$IMAGE" bash -lc \
   "$BIN --filter '$FILTER' --stats" 2>&1 | tee "$OUT/raw.txt"
 
-echo "[*] done. Raw output in $OUT/raw.txt"
-echo "[*] next: python3 scripts/parse_results.py $OUT/raw.txt"
+echo "[*] raw output in $OUT/raw.txt"
+
+# Parse into JSON + Prometheus textfile.
+python3 "$HERE/scripts/parse_results.py" "$OUT/raw.txt" || echo "[!] parse failed"
+
+# Push to Pushgateway if the stack is up (non-fatal).
+if [[ "${PUSH:-1}" == "1" && -f "$OUT/metrics.prom" ]]; then
+  "$HERE/scripts/push_metrics.sh" "$OUT/metrics.prom" || echo "[i] skipped push (stack not up)"
+fi
+
+echo "[*] done: $OUT"
