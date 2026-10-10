@@ -52,3 +52,22 @@ curve papers like BulletCT try to improve.
 - TODO M2: dedicated batch-verify curve, more batch points.
 - TODO: pin exact commit per run (done — recorded), Prometheus + Grafana, nightly
   cron, then deploy to server.
+
+## Proof SIZES (bytes) — measured via Monero serialization (host-independent)
+
+Validated: CLSAG ring-16 = 577 B = 16×32 (s) + 32 (c1) + 32 (D) + 1 (varint). Exact.
+
+| Scheme | param | size (bytes) |
+|---|---|---|
+| Bulletproof+ | 1 out | 578 |
+| Bulletproof+ | 2 out | 642 |
+| Bulletproof+ | 16 out | 834 |
+| Bulletproof (old) | 1 out | 674 |
+| Bulletproof (old) | 2 out | 738 |
+| CLSAG | ring 2 | 129 |
+| CLSAG | ring 16 (default) | 577 |
+| CLSAG | ring 64 | 2113 |
+
+- BP+ is ~96 B smaller than old BP at every size → part of why Monero adopted BP+.
+- Aggregation wins hugely: 16 outputs in one BP+ = 834 B vs 16×578 = 9248 B separate.
+- CLSAG grows +32 B per ring member (linear) — the privacy/size tradeoff.
