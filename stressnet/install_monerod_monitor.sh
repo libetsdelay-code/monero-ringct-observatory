@@ -13,7 +13,10 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq git r-base-core r-base-dev \
   r-cran-argparser r-cran-dbi r-cran-rsqlite r-cran-rcurl r-cran-ps >/dev/null
-Rscript -e 'if (!requireNamespace("RJSONIO", quietly=TRUE)) install.packages("RJSONIO", repos="https://cloud.r-project.org", quiet=TRUE)'
+# RJSONIO is not packaged in Debian. ps must come from CRAN too: Debian 12's
+# r-cran-ps 1.7.2 has no "maxrss" field, and the collector then crashes on
+# every insert into process_info ("No value given for placeholder mem_maxrss").
+Rscript -e 'for (p in c("RJSONIO", "ps")) if (!requireNamespace(p, quietly=TRUE) || (p == "ps" && packageVersion("ps") < "1.9.0")) install.packages(p, repos="https://cloud.r-project.org", quiet=TRUE)'
 
 if [ ! -d "$DIR/.git" ]; then
   git clone -q https://github.com/Rucknium/monerod-monitor.git "$DIR"

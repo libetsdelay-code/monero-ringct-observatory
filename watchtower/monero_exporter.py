@@ -26,11 +26,46 @@ def rpc(method, params=None):
         return json.loads(r.read()).get("result", {})
 
 
+def monerod_pid():
+    for d in os.listdir("/proc"):
+        if d.isdigit():
+            try:
+                with open(f"/proc/{d}/comm") as f:
+                    if f.read().strip() == "monerod":
+                        return d
+            except OSError:
+                pass
+    return None
+
+
+def process_metrics(g):
+    """Resource use of monerod, read from /proc. Gives peak RSS (VmHWM),
+    which the R ps package reports as NA for other processes on Linux."""
+    pid = monerod_pid()
+    if pid is None:
+        return
+    with open(f"/proc/{pid}/status") as f:
+        status = dict(line.split(":", 1) for line in f if ":" in line)
+    kb = lambda k: int(status[k].split()[0]) * 1024
+    g("process_rss_bytes", kb("VmRSS"))
+    g("process_peak_rss_bytes", kb("VmHWM"))
+    g("process_threads", int(status["Threads"]))
+    with open(f"/proc/{pid}/stat") as f:
+        fields = f.read().rsplit(")", 1)[1].split()
+    ticks = os.sysconf("SC_CLK_TCK")
+    g("process_cpu_seconds_total", (int(fields[11]) + int(fields[12])) / ticks)
+
+
 def collect():
     out = []
 
     def g(name, val):
         out.append(f"monero_{name} {val}")
+
+    try:
+        process_metrics(g)
+    except (OSError, KeyError, ValueError, IndexError):
+        pass
 
     try:
         info = rpc("get_info")
