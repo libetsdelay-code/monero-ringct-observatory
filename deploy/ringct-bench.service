@@ -10,4 +10,6 @@ User=root
 WorkingDirectory=/root/monero-ringct-observatory
 Environment=REFS=release-v0.18
 # To compare versions:  Environment=REFS=release-v0.18 master
+# Generic hardware label recorded with each run (never the exact CPU model).
+Environment="HOST_LABEL=desktop 14-core"
 ExecStart=/root/monero-ringct-observatory/scripts/nightly.sh
