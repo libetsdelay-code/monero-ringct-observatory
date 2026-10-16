@@ -31,8 +31,9 @@ REF="${REF:-${MONERO_REF:-unknown}}"
   echo "monero_commit=$(cat "$OUT/monero_commit.txt")"
   echo "monero_ref=$REF"
   echo "image=$IMAGE"
-  echo "host_cpu=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ //')"
-  echo "host_kernel=$(uname -r)"
+  # Generic label only: exact CPU model and kernel stay private.
+  echo "host_label=${HOST_LABEL:-unspecified}"
+  echo "host_cores=$(nproc)"
   echo "filter=$FILTER"
 } > "$OUT/meta.env"
 

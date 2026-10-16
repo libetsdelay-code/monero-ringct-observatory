@@ -1,56 +1,58 @@
 # Monero RingCT Performance Observatory
 
-An independent, reproducible benchmark lab for Monero's privacy proofs.
+Self-hosted, reproducible measurement tools for Monero. Three parts share one
+Prometheus + Grafana stack:
 
-It measures how **big** and how **slow** Monero's real cryptographic proofs are —
-**CLSAG** (ring signature) and **Bulletproofs+** (range proof) — and tracks those
-numbers across Monero releases/commits. It also fact-checks the scalability claims
-of research papers such as **BulletCT** (IACR eprint 2025/188).
-
-Design notes live in the Alexandria zettelkasten: *"Main Monero Idea Project"* and
-*"Monero Assurance Node (umbrella project)"*.
+| Part | What it does | Directory |
+|---|---|---|
+| **RingCT benchmark** | Builds Monero's own `performance_tests` from source and tracks CLSAG and Bulletproofs+ verify time and proof size across releases and commits. | `docker/`, `scripts/`, `results/` |
+| **Watchtower** | A pruned mainnet node plus a stdlib-only Prometheus exporter: height, sync, peers, mempool, alternate chains (reorg signal), and monerod CPU/RAM. | `watchtower/` |
+| **FCMP++ stressnet** | Two identical stressnet nodes (4 cores / 6 GB each), one on SSD and one on HDD, to measure the minimum hardware for an FCMP++ node. Contribution to [seraphis-migration/monero#495](https://github.com/seraphis-migration/monero/issues/495). | `stressnet/` |
 
 ## Why
-- Papers publish self-measured numbers, often without reproducible code.
-- Every node verifies every transaction — proof size and verify time decide
-  blockchain bloat, sync time, and decentralization.
-- The community lacks independent, continuous, reproducible measurements.
+- Research papers often publish self-measured numbers without reproducible code.
+- Every node verifies every transaction, so proof size and verify time drive
+  chain growth, sync time and decentralization.
+- FCMP++ changes the cost of running a node. Real measurements on modest
+  hardware help answer "what is the minimum?".
 
-## What it measures (roadmap)
-1. **Proof size** (bytes) — CLSAG, Bulletproofs+.           ← later
-2. **Single verification time**.                             ← MILESTONE 1 (now)
-3. **Batch-verification scaling** (cost vs. batch size).     ← MILESTONE 2
-4. **Full-chain sync/verification time** per release.        ← MILESTONE 3
-5. Apples-to-apples vs. research schemes where code exists.  ← later / best-effort
+## Results so far
+- **Proof size** (validated with Monero's own serialization): CLSAG ring 16 =
+  577 B, Bulletproofs+ 1 output = 578 B, 16 outputs = 834 B.
+- **Verify time:** CLSAG scales linearly with ring size. Batch verification of
+  Bulletproofs+ drops the per-proof cost by about half from batch 2 to batch 100.
+  See `results/milestone-1/FINDINGS.md`.
+- **Cross-version:** `release-v0.18` vs `master` CLSAG and BP+ timings are within
+  about 2% (FCMP++ code is additive and does not slow the current proofs).
+- **Stressnet:** peak RSS about 4.3 GB (SSD) and 4.7 GB (HDD) under a 6 GB cap.
+  A full stressnet node alone keeps an HDD close to 100% busy.
 
-## How it works
-- `docker/Dockerfile.bench` builds Monero's own `performance_tests` binary from
-  source inside a container (no host deps; fully reproducible).
-- `scripts/run_bench.sh` runs the CLSAG/Bulletproofs tests, saving raw output +
-  metadata (exact Monero commit, host CPU) under `results/run_<stamp>/`.
-- `scripts/parse_results.py` turns raw output into `parsed.json` and a Prometheus
-  `metrics.prom` textfile.
-- Later: Prometheus scrapes the textfiles; Grafana shows the public dashboard.
-
-## Quick start
+## Quick start (benchmark)
 ```bash
-# 1. Build the benchmark image (compiles Monero's performance_tests; ~15-40 min)
 docker build -f docker/Dockerfile.bench -t monero-ringct-bench:latest .
-
-# 2. Run the CLSAG + Bulletproofs benchmarks
-./scripts/run_bench.sh
-
-# 3. Parse into JSON + Prometheus metrics
-python3 scripts/parse_results.py results/run_<stamp>/raw.txt
+HOST_LABEL="desktop 14-core" ./scripts/run_bench.sh   # parses and pushes metrics
+./scripts/bench_ref.sh master                          # benchmark another ref
 ```
 
-## Status
-- [x] Repo + containerized harness scaffolded
-- [ ] Milestone 1: first real CLSAG/Bulletproofs+ verify timings
-- [ ] Prometheus + Grafana
-- [ ] Deploy to server (24/7, nightly + per-release runs)
+Observability stack:
+```bash
+cp observability/.env.example observability/.env      # set scrape target IPs
+docker compose -f observability/docker-compose.yml up -d
+# Grafana on :3000 (change the admin password before exposing it)
+```
 
-## Notes
-- Prototyped on a laptop; target host is server (24/7).
-- Honest caveat: benchmarking Monero's own code is doable now. Benchmarking
-  research schemes depends on usable reference code existing (often it does not).
+Deployment notes (LXC, systemd timer for nightly runs): `deploy/DEPLOY.md`.
+
+## Privacy rules of this repo
+- Only aggregate metrics are exported or published. Peer IP addresses that the
+  collectors see are never committed or published.
+- Unrestricted RPC stays on localhost.
+- Scrape target addresses live in the git-ignored `observability/.env`.
+
+## Caveats
+- Benchmarking Monero's own code is reliable. Comparing with research schemes
+  depends on usable reference code existing.
+- Timings depend on hardware. Compare runs only from the same host.
+
+## License
+MIT. See `LICENSE`.
